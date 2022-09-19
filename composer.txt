@@ -1,0 +1,5 @@
+docker run --rm --interactive --tty --volume $PWD:/app --volume $PWD/.composer:/tmp composer require nuwave/lighthouse
+# Crear proyecto lumen
+docker run --rm --interactive --tty --volume $PWD:/app --volume $PWD/.composer:/tmp composer create-project --prefer-dist laravel/lumen <project name>
+# JWT Firebase Lib
+docker run --rm --interactive --tty --volume $PWD:/app --volume $PWD/.composer:/tmp composer require firebase/php-jwt

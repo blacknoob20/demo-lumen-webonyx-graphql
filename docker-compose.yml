@@ -1,0 +1,33 @@
+version: '2.2'
+services:
+  php:
+    hostname: crguerrero
+    container_name: fpm
+    image: php8.1-fpm-alpine-oci8
+    cpuset: '0'
+    # mem_limit: 64m
+    volumes:
+      - $PWD/:/var/www/html/
+    environment:
+      - TZ=America/Guayaquil
+    networks:
+      - net
+  sgp:
+    depends_on:
+      - php
+    container_name: apache
+    image: webdevops/apache:alpine-3
+    cpuset: '1'
+    mem_limit: 32m
+    environment:
+      - WEB_PHP_SOCKET=php:9000
+      - WEB_DOCUMENT_ROOT=/var/www/html/
+    volumes:
+      - $PWD/:/var/www/html/
+    ports:
+      - '88:80'
+      - '8443:443'
+    networks:
+      - net
+networks:
+  net:
