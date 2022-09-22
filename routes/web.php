@@ -15,7 +15,7 @@
 
 $router->get('/', function () use ($router) {
     return response()->json([
-        'version' => $router->app->version(),
+        'framework' => $router->app->version(),
         'app_name' => config('app.name'),
     ]);
 });
@@ -27,8 +27,12 @@ $router->get('/', function () use ($router) {
 //     ]);
 // });
 
-$router->post('graphql', 'GraphQLController@graphqlEndpoint');
+// Solo se puede acceder con TOKEN
+$router->group(['middleware' => 'token'], function () use ($router) {
+    $router->post('graphql', 'GraphQLController@graphqlEndpoint');
+});
 
+// Ruta para el API de login
 $router->group(['middleware' => 'auth1'], function () use ($router) {
-    $router->post('login', 'MyLoginController@iniciar_sesion');
+    $router->post('login', 'LoginController@iniciar_sesion');
 });

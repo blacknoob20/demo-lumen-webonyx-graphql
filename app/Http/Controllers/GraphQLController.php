@@ -3,9 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Graphql\GraphQLDefinition;
-// use App\Graphql\Resolvers\MyResolver;
 use Illuminate\Http\Request;
-
 use GraphQL\GraphQL;
 use GraphQL\Type\Schema;
 

@@ -88,10 +88,10 @@ class Usuario extends Adapter
         return $reg;
     }
 
-    public static function get($idusuario) {
+    public function get($idusuario) {
         $sql = sprintf("select SE_PQ_USUARIO.f_get('%s') AS MFRC from dual ", $idusuario);
-        self::setSql($sql);
-        $reg = self::selectOne();
+        $this->setSql($sql);
+        $reg = $this->selectOne();
         return $reg;
     } // end get()
 

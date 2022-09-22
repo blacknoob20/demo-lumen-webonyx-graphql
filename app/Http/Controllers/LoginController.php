@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Oracle\SE\Usuario;
 use Illuminate\Http\Request;
 
-class MyLoginController extends Controller
+class LoginController extends Controller
 {
     public $idusuario;
     public $clave;

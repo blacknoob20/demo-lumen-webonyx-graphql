@@ -5,7 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Support\Facades\Log;
 
-class MyAuthMiddleware
+class LoginMiddleware
 {
     /**
      * Handle an incoming request.

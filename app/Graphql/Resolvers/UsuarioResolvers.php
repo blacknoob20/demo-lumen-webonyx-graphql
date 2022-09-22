@@ -20,7 +20,7 @@ class UsuarioResolvers
                     'args' => [
                         'idusuario' => Type::nonNull(Type::string())
                     ],
-                    'resolve' => fn ($_, $args) => Usuario::get($args['idusuario']),
+                    'resolve' => fn ($_, $args) => (new Usuario())->get($args['idusuario']),
                 ]
             ],
         ]);
