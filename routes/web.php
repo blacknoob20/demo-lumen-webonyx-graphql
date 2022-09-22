@@ -27,6 +27,8 @@ $router->get('/', function () use ($router) {
 //     ]);
 // });
 
+$router->post('graphql', 'GraphQLController@graphqlEndpoint');
+
 $router->group(['middleware' => 'auth1'], function () use ($router) {
     $router->post('login', 'MyLoginController@iniciar_sesion');
 });
