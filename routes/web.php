@@ -26,6 +26,8 @@ $router->get('/', function () use ($router) {
 //         'app_key' => \Illuminate\Support\Str::random(32),
 //     ]);
 // });
+// Generate CAPTCHA image
+$router->get('captcha', 'CaptchaController@generarCaptcha');
 
 // Solo se puede acceder con TOKEN
 $router->group(['middleware' => 'token'], function () use ($router) {
