@@ -6,14 +6,14 @@ use Illuminate\Support\Facades\Log;
 
 class Adapter extends Conexion
 {
-    protected $sql         = '';
-    protected $clob_data   = '';
-    protected $clob_field  = '';
-    protected $clob_data2  = '';
-    protected $clob_field2 = '';
-    protected $msjAlerta   = '';
-    protected $tipoAlerta  = '';
-    protected $idAI        = 0;
+    protected $sql;
+    protected $clob_data;
+    protected $clob_field;
+    protected $clob_data2;
+    protected $clob_field2;
+    protected $msjAlerta;
+    protected $tipoAlerta;
+    protected $idAI;
 
     public function __construct()
     {
@@ -75,27 +75,9 @@ class Adapter extends Conexion
 
     public function selectOne()
     {
-        $reg    = [];
-        $stmt   = oci_parse($this->cnx, $this->sql);
-        $result = oci_execute($stmt);
+        $reg = $this->selectAll();
 
-        if (!$result) {
-            $this->__errorDB(NULL, NULL, $stmt);
-            return $reg;
-        }
-
-        Log::notice("{$this->sql}\t{$_SERVER['PHP_SELF']}" . get_class($this) . "\t" . __LINE__ . "\t" . ($_SESSION['usuario'] ?? '') . "\t" . ($_SESSION['ip'] ?? '0.0.0.0') . "\t" . ($_SESSION['dir'] ?? ''));
-
-        if (strripos($this->sql, 'AS MFRC from dual') > 0) {
-            $descriptor = oci_fetch_array($stmt, OCI_ASSOC)['MFRC'];
-            oci_execute($descriptor);  // returned column value from the query is a ref cursor
-        }
-
-        $reg = oci_fetch_array(($descriptor ?? $stmt), OCI_ASSOC + OCI_RETURN_LOBS);  // extraer datos de 1 fila
-
-        oci_free_statement($stmt);
-
-        return array_change_key_case($reg, CASE_LOWER);
+        return ($reg[0] ?? $reg);
     } // end selectOne
 
     public function selectAll()
@@ -106,13 +88,12 @@ class Adapter extends Conexion
 
         if (!oci_execute($stmt)) {
             $this->__errorDB(NULL, NULL, $stmt);
-
             oci_free_statement($stmt);
 
             return $registros;
         }
 
-        Log::notice("{$this->sql}\t{$_SERVER['PHP_SELF']}" . get_class($this) . "\t" . __LINE__ . "\t" . ($_SESSION['usuario'] ?? '') . "\t" . ($_SESSION['ip'] ?? '0.0.0.0') . "\t" . ($_SESSION['dir'] ?? ''));
+        $this->__log($this->sql, __LINE__, 'notice');
 
         if (strripos($this->sql, 'AS MFRC from dual') > 0) {
             $descriptor = oci_fetch_array($stmt, OCI_ASSOC + OCI_RETURN_LOBS)['MFRC'];
@@ -133,8 +114,8 @@ class Adapter extends Conexion
     {
         $errCode    = 0;
         $errDesc    = '';
-        $isSetCLOB1 = $this->clob_field != '' && $this->clob_data != '';
-        $isSetCLOB2 = $this->clob_field2 != '' && $this->clob_data2 != '';
+        $isSetCLOB1 = ($this->clob_field  != '' && $this->clob_data  != '');
+        $isSetCLOB2 = ($this->clob_field2 != '' && $this->clob_data2 != '');
         $stmt       = oci_parse($this->cnx, $this->sql);
 
         if (strripos($this->sql, ', :errcode, :errdesc);') > 0) {
@@ -154,8 +135,7 @@ class Adapter extends Conexion
             oci_bind_by_name($stmt, ':errdesc', $errDesc, 4000);
         }
 
-        Log::critical(($blog ? $this->sql . ($this->clob_data != '' ? '[' . $this->clob_field . ':' . $this->clob_data . ']' : 'vacio') . ($this->clob_data2 != '' ? '[' . $this->clob_field2 . ':' . $this->clob_data2 . ']' : 'vacio') : substr($this->sql, 0, strpos($this->sql, '\','))) . "\t{$_SERVER['PHP_SELF']}" . get_class($this) . "\t" . __LINE__ . "\t" . ($_SESSION['usuario'] ?? '') . "\t" . ($_SESSION['ip'] ?? '0.0.0.0') . "\t" . ($_SESSION['dir'] ?? ''));
-
+        $this->__log(($blog ? $this->sql . ($this->clob_data != '' ? '[' . $this->clob_field . ':' . $this->clob_data . ']' : 'vacio') . ($this->clob_data2 != '' ? '[' . $this->clob_field2 . ':' . $this->clob_data2 . ']' : 'vacio') : substr($this->sql, 0, strpos($this->sql, '\','))), __LINE__, 'critical');
         $execute = oci_execute($stmt);
 
         if ($isSetCLOB1) $clob->free();
@@ -233,9 +213,14 @@ class Adapter extends Conexion
                 }
             }
 
-            Log::error("$errCode\t$errDesc\t{$this->sql}\t{$_SERVER['PHP_SELF']}\t" . get_class($this) . "\t" . __LINE__ . "\t" . ($_SESSION['usuario'] ?? '') . "\t" . ($_SESSION['ip']  ?? '0.0.0.0') . "\t" . ($_SESSION['dir'] ?? ''));
+            $this->__log("$errCode\t$errDesc\t{$this->sql}", __LINE__, 'error');
         }
     } //__errorDB()
+
+    protected function __log($msg, $line, $type = 'notice')
+    {
+        Log::$type("$msg\t" . get_class($this) . "\t$line\t{$_SERVER['HTTP_HOST']}\t{$_SERVER['REMOTE_ADDR']}");
+    }
 
     //OJOT solo para desarrollo, hay que quitarlo en produccion
     protected  function showobject($color)
@@ -248,5 +233,6 @@ class Adapter extends Conexion
     {
         echo "<br><span style='color:" . (is_null($color) ? "green" : $color) . "'>" . htmlentities($this->sql) . '</span>';
     } //showoject()
+
 
 } // end class
