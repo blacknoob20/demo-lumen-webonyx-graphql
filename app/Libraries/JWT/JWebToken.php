@@ -7,12 +7,6 @@ use Firebase\JWT\Key;
 
 class JWebToken extends JWT
 {
-    private $key;
-
-    public function __construct()
-    {
-        $this->key = env('APP_KEY');
-    }
 
     /**
      * IMPORTANT:
@@ -20,13 +14,27 @@ class JWebToken extends JWT
      * https://tools.ietf.org/html/draft-ietf-jose-json-web-algorithms-40
      * for a list of spec-compliant algorithms.
      */
-    public function getToken($payload)
+    public static function getToken($payload)
     {
-        return parent::encode($payload, $this->key, 'HS256');
+        $key = env('APP_KEY');
+        $unixTimeTokenCreation = strtotime('now');
+        // TODO: Parametrizar el tiempo de exipración puede ser DB o ENV
+        $unixTimeTokenExpiration = strtotime('+1 minutes', $unixTimeTokenCreation);
+
+        return parent::encode(
+            [
+                ...$payload,
+                'iat' => $unixTimeTokenCreation,
+                'exp' => $unixTimeTokenExpiration,
+            ],
+            $key,
+            'HS256'
+        );
     }
 
-    public function getDecodeToken($jwt)
+    public static function getDecodedToken($jwt)
     {
-        return parent::decode($jwt, new Key($this->key, 'HS256'));
+        $key = env('APP_KEY');
+        return parent::decode($jwt, new Key($key, 'HS256'));
     }
 }
