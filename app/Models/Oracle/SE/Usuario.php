@@ -7,52 +7,57 @@ use App\Models\Oracle\Adapter;
 
 class Usuario extends Adapter
 {
+    private $idsistema;
     private $idusuario;
     private $idusuariored;
     private $clave;
     private $idusuario_log;
     private $ip;
+    private $idempleado;
+    private $numdocumento;
+    private $numeropregunta;
+    private $respuesta;
 
-    public function __construct()
+    public function __construct($props = [])
     {
         parent::__construct();
 
-        $this->idusuario     = '';
-        $this->idusuariored  = '';
-        $this->clave         = '';
-        $this->idusuario_log = '';
-        $this->ip            = '';
+        $this->idsistema      = $props['idsistema'] ?? NULL;
+        $this->idusuario      = $props['idusuario'] ?? NULL;
+        $this->idusuariored   = $props['idusuariored'] ?? NULL;
+        $this->clave          = $props['clave'] ?? NULL;
+        $this->idusuario_log  = $props['idusuario_log'] ?? NULL;
+        $this->ip             = $props['ip'] ?? NULL;
+        $this->idempleado     = $props['idempleado'] ?? NULL;
+        $this->numdocumento   = $props['numdocumento'] ?? NULL;
+        $this->pregunta       = $props['pregunta'] ?? NULL;
+        $this->numeropregunta = $props['numeropregunta'] ?? NULL;
+        $this->respuesta      = $props['respuesta'] ?? NULL;
     }
 
     //validacion de usuario contraseña en Ldap u oracle
-    public function validaUsuario($idusuario, $clave, $ip)
+    public function validaUsuario()
     {
-        $this->idusuario_log = $idusuario;
-        $this->ip            = $ip;
         // Conectar LDAP
-        list($isNetUser, $foto) = $this->_verificarUsuarioLDAP($idusuario, $clave);
+        list($isNetUser, $foto) = $this->_verificarUsuarioLDAP($this->idusuariored, $this->clave);
 
-        // Cambiar el usuario a usuario de red
         if ($isNetUser) {
-            $existeLdap   = ($this->getMsjAlerta() == '');
-            $this->idusuariored = $idusuario;
-            $this->idusuario    = NULL;
-            $this->clave        = NULL;
+            $existeLdap      = ($this->getMsjAlerta() == '');
+            $this->idusuario = NULL;
+            $this->clave     = NULL;
         } else {
             $existeLdap = true;
             $this->idusuariored = NULL;
-            $this->idusuario    = $idusuario;
-            $this->clave        = $clave;
         }
 
         if ($existeLdap) {
             if ($this->iniciar_sesion()) {
-                $reg     = $this->getFull($this->idusuario, $this->idusuariored);
-                $payload = ['uid' => $reg['idempleado'], 'nick' => $idusuario];
+                $reg     = $this->getFull();
+                $payload = ['uid' => $reg['idempleado'], 'nick' => ($this->idusuario ?? $this->idusuariored)];
 
                 return [
                     'foto'  => $foto,
-                    'token' => (new JWebToken())->getToken($payload),
+                    'token' => JWebToken::getToken($payload),
                 ];
             }
         }
@@ -82,30 +87,63 @@ class Usuario extends Adapter
     public function getUsuariosXPersona($idpersona)
     {
         $par =  (is_null($idpersona) || $idpersona == '' ? "null" : sprintf("%s", $idpersona));
+
         $sql = sprintf("select SE_PQ_Usuario.f_getUsuariosXPersona( %s) AS MFRC from dual ", $par);
         $this->setSql($sql);
         $reg = $this->selectAll();
+
         return $reg;
     }
 
-    public function get($idusuario) {
-        $sql = sprintf("select SE_PQ_USUARIO.f_get('%s') AS MFRC from dual ", $idusuario);
-        $this->setSql($sql);
-        $reg = $this->selectOne();
-        return $reg;
-    } // end get()
-
-    public function getFull($idusuario, $idusuariored)
+    public function getFull()
     {
-        $par =  (is_null($idusuario) || $idusuario == '' ? "null" : sprintf("'%s'", strtoupper($idusuario)))
-            . (is_null($idusuariored) || $idusuariored == '' ? ", null" : sprintf(", '%s'", strtoupper($idusuariored)));
-        $sql = sprintf("select SE_PQ_USUARIO.f_getFull(%s) AS MFRC from dual ", $par);
+        $par = (is_null($this->idusuario) || $this->idusuario == '' ? "null" : sprintf("'%s'", strtoupper($this->idusuario)))
+            . (is_null($this->idusuariored) || $this->idusuariored == '' ? ", null" : sprintf(", '%s'", strtoupper($this->idusuariored)));
 
+        $sql = sprintf("select SE_PQ_USUARIO.f_getFull(%s) AS MFRC from dual ", $par);
         $this->setSql($sql);
         $reg = $this->selectOne();
 
         return $reg;
     } // end getFull()
+
+    public function getPregunta()
+    {
+        $par = sprintf("'%s'", strtoupper($this->idusuario))
+            . sprintf(', %d', $this->idempleado)
+            . sprintf(", '%s'", $this->numdocumento);
+
+        $sql = sprintf('select SE_PQ_USUARIO.f_getPregunta(%s) AS MFRC from dual ', $par);
+        $this->setSql($sql);
+        $reg = $this->selectOne();
+
+        return $reg;
+    }  // end getPregunta()
+
+    public function get_modulos() {
+        $par = sprintf("'%s', %d", $this->idusuario, $this->idsistema);
+
+        $sql = "select SE_PQ_Session.f_ModuloXUsuario($par) AS MFRC from dual";
+        $this->setSql($sql);
+        $reg = $this->selectAll();
+
+        return $reg;
+    } //get_modulos()
+
+    public function validaPregunta()
+    {
+        $par = sprintf("'%s'", strtoupper($this->idusuario))
+            . sprintf(', %d', $this->numeropregunta)
+            . sprintf(", '%s'", $this->respuesta)
+            . sprintf(', %d', $this->idempleado)
+            . sprintf(", '%s'", $this->numdocumento);
+
+        $sql = sprintf('select SE_PQ_USUARIO.f_validaPregunta(%s) AS MFRC from dual', $par);
+        $this->setSql($sql);
+        $reg = $this->selectOne();
+
+        return $reg;
+    }  //end validaPregunta()
 
     private function _verificarUsuarioLDAP($idusuario, $clave)
     {

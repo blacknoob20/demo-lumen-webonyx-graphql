@@ -31,10 +31,16 @@ $router->get('captcha', 'CaptchaController@generarCaptcha');
 
 // Solo se puede acceder con TOKEN
 $router->group(['middleware' => 'token'], function () use ($router) {
+    $router->get('renovar', 'LoginController@renovarToken');
     $router->post('graphql', 'GraphQLController@graphqlEndpoint');
 });
 
 // Ruta para el API de login
 $router->group(['middleware' => 'auth1'], function () use ($router) {
     $router->post('login', 'LoginController@iniciar_sesion');
+});
+
+$router->group(['prefix' => 'verificacion'], function () use ($router) {
+    $router->post('/', 'LoginController@getPregunta');
+    $router->post('preguntas', 'LoginController@validaPregunta');
 });

@@ -19,7 +19,6 @@ class LoginMiddleware
         $credencials = validator($request->all(),[
             'idusuario' => 'required|max:15',
             'clave'     => 'required|max:100',
-            // 'ip'        => 'required|ip',
         ]);
 
         if ($credencials->fails()) {
