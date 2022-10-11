@@ -72,6 +72,9 @@ class Adapter extends Conexion
     {
         $this->name_idAI = $value;
     }
+    public function isNvl($value){
+        return (is_null($value) || $value == '');
+    }
 
     public function selectOne()
     {
