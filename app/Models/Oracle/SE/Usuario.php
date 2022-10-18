@@ -3,6 +3,7 @@
 namespace App\Models\Oracle\SE;
 
 use App\Libraries\JWT\JWebToken;
+use App\Libraries\Utils\UtilsXml;
 use App\Models\Oracle\Adapter;
 
 class Usuario extends Adapter
@@ -68,13 +69,9 @@ class Usuario extends Adapter
     public function iniciar_sesion()
     {
         $par = sprintf("'%s'", strtoupper($this->idusuario))
-            . (is_null($this->clave) ? ', null' : sprintf(",  '%s'", md5($this->clave)))
-            . sprintf(", '%s'", 'NOMBREPC')
-            . sprintf(", '%s'", $this->ip)
-            . sprintf(", '%s'", $this->idusuario_log);
-        $sql = sprintf("begin SE_PQ_SESSION.p_Inicia_Sesion(%s, true, :errcode, :errdesc); end;", $par);
-
-        $this->setSql($sql);
+            . ($this->isNvl($this->clave) ? ', null' : sprintf(", '%s'", md5($this->clave)))
+            . sprintf(", 'NOMBREPC', '%s', '%s'", $this->ip, $this->idusuario_log);
+        $this->setSql("begin SE_PQ_SESSION.p_Inicia_Sesion($par, true, :errcode, :errdesc); end;");
 
         return $this->mantenimiento(false);
     } //iniciar_sesion()
@@ -86,10 +83,8 @@ class Usuario extends Adapter
      */
     public function getUsuariosXPersona($idpersona)
     {
-        $par =  (is_null($idpersona) || $idpersona == '' ? "null" : sprintf("%s", $idpersona));
-
-        $sql = sprintf("select SE_PQ_Usuario.f_getUsuariosXPersona( %s) AS MFRC from dual ", $par);
-        $this->setSql($sql);
+        $par =  ($this->isNvl($idpersona) ? 'null' : sprintf('%s', $idpersona));
+        $this->setSql("select SE_PQ_USUARIO.f_getUsuariosXPersona($par) AS MFRC from dual");
         $reg = $this->selectAll();
 
         return $reg;
@@ -97,34 +92,33 @@ class Usuario extends Adapter
 
     public function getFull()
     {
-        $par = (is_null($this->idusuario) || $this->idusuario == '' ? "null" : sprintf("'%s'", strtoupper($this->idusuario)))
-            . (is_null($this->idusuariored) || $this->idusuariored == '' ? ", null" : sprintf(", '%s'", strtoupper($this->idusuariored)));
-
-        $sql = sprintf("select SE_PQ_USUARIO.f_getFull(%s) AS MFRC from dual ", $par);
-        $this->setSql($sql);
+        $par = ($this->isNvl($this->idusuario) ? 'null' : sprintf("'%s'", strtoupper($this->idusuario)))
+            . ($this->isNvl($this->idusuariored) ? ', null' : sprintf(", '%s'", strtoupper($this->idusuariored)));
+        $this->setSql("select SE_PQ_USUARIO.f_getFull($par) AS MFRC from dual ");
         $reg = $this->selectOne();
+
+        // Convertir XML a arreglos
+        $reg['companeros'] = UtilsXml::xml2array($reg['companeros']);
+        $reg['sistemas']   = UtilsXml::xml2array($reg['sistemas']);
+        $reg['areas']      = UtilsXml::xml2array($reg['areas']);
+        $reg['modulos']    = UtilsXml::xml2array($reg['modulos']);
 
         return $reg;
     } // end getFull()
 
     public function getPregunta()
     {
-        $par = sprintf("'%s'", strtoupper($this->idusuario))
-            . sprintf(', %d', $this->idempleado)
-            . sprintf(", '%s'", $this->numdocumento);
-
-        $sql = sprintf('select SE_PQ_USUARIO.f_getPregunta(%s) AS MFRC from dual ', $par);
-        $this->setSql($sql);
+        $par = sprintf("'%s', %d, '%s'", strtoupper($this->idusuario), $this->idempleado, $this->numdocumento);
+        $this->setSql("select SE_PQ_USUARIO.f_getPregunta($par) AS MFRC from dual");
         $reg = $this->selectOne();
 
         return $reg;
     }  // end getPregunta()
 
-    public function get_modulos() {
+    public function get_modulos()
+    {
         $par = sprintf("'%s', %d", $this->idusuario, $this->idsistema);
-
-        $sql = "select SE_PQ_Session.f_ModuloXUsuario($par) AS MFRC from dual";
-        $this->setSql($sql);
+        $this->setSql("select SE_PQ_Session.f_ModuloXUsuario($par) AS MFRC from dual");
         $reg = $this->selectAll();
 
         return $reg;
@@ -132,14 +126,8 @@ class Usuario extends Adapter
 
     public function validaPregunta()
     {
-        $par = sprintf("'%s'", strtoupper($this->idusuario))
-            . sprintf(', %d', $this->numeropregunta)
-            . sprintf(", '%s'", $this->respuesta)
-            . sprintf(', %d', $this->idempleado)
-            . sprintf(", '%s'", $this->numdocumento);
-
-        $sql = sprintf('select SE_PQ_USUARIO.f_validaPregunta(%s) AS MFRC from dual', $par);
-        $this->setSql($sql);
+        $par = sprintf("'%s', %d, '%s, %d', '%s'", strtoupper($this->idusuario), $this->numeropregunta, $this->respuesta, $this->idempleado, $this->numdocumento);
+        $this->setSql("select SE_PQ_USUARIO.f_validaPregunta($par) AS MFRC from dual");
         $reg = $this->selectOne();
 
         return $reg;
