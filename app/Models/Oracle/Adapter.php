@@ -2,7 +2,7 @@
 
 namespace App\Models\Oracle;
 
-use Illuminate\Support\Facades\Log;
+use App\Libraries\Logger\Lg;
 
 class Adapter extends Conexion
 {
@@ -72,7 +72,8 @@ class Adapter extends Conexion
     {
         $this->name_idAI = $value;
     }
-    public function isNvl($value){
+    public function isNvl($value)
+    {
         return (is_null($value) || $value == '');
     }
 
@@ -96,7 +97,7 @@ class Adapter extends Conexion
             return $registros;
         }
 
-        $this->__log($this->sql, __LINE__, 'notice');
+        Lg::w($this->sql, '0', 'OK', get_class($this), __LINE__);
 
         if (strripos($this->sql, 'AS MFRC from dual') > 0) {
             $descriptor = oci_fetch_array($stmt, OCI_ASSOC + OCI_RETURN_LOBS)['MFRC'];
@@ -138,7 +139,9 @@ class Adapter extends Conexion
             oci_bind_by_name($stmt, ':errdesc', $errDesc, 4000);
         }
 
-        $this->__log(($blog ? $this->sql . ($this->clob_data != '' ? '[' . $this->clob_field . ':' . $this->clob_data . ']' : 'vacio') . ($this->clob_data2 != '' ? '[' . $this->clob_field2 . ':' . $this->clob_data2 . ']' : 'vacio') : substr($this->sql, 0, strpos($this->sql, '\','))), __LINE__, 'critical');
+        $msg = ($blog ? "{$this->sql} [{$this->clob_field}:{$this->clob_data}] [{$this->clob_field2}:{$this->clob_data2}]" : substr($this->sql, 0, strpos($this->sql, '\',')));
+        Lg::w($msg, '0', 'OK', get_class($this), __LINE__, 'critical');
+
         $execute = oci_execute($stmt);
 
         if ($isSetCLOB1) $clob->free();
@@ -216,26 +219,8 @@ class Adapter extends Conexion
                 }
             }
 
-            $this->__log("$errCode\t$errDesc\t{$this->sql}", __LINE__, 'error');
+            Lg::w($this->sql, $errCode, $errDesc, get_class($this), __LINE__, 'error');
         }
     } //__errorDB()
-
-    protected function __log($msg, $line, $type = 'notice')
-    {
-        Log::$type("$msg\t" . get_class($this) . "\t$line\t{$_SERVER['HTTP_HOST']}\t{$_SERVER['REMOTE_ADDR']}");
-    }
-
-    //OJOT solo para desarrollo, hay que quitarlo en produccion
-    protected  function showobject($color)
-    {
-        echo "<br><span style='color:" . (is_null($color) ? "blue" : $color) . "'>";
-        print_r($this);
-        echo '</span>';
-    } //showoject()
-    protected  function showsql($color)
-    {
-        echo "<br><span style='color:" . (is_null($color) ? "green" : $color) . "'>" . htmlentities($this->sql) . '</span>';
-    } //showoject()
-
 
 } // end class
