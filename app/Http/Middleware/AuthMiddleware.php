@@ -6,7 +6,7 @@ use App\Libraries\Logger\Lg;
 use Closure;
 use Illuminate\Http\Response;
 
-class LoginMiddleware
+class AuthMiddleware
 {
     /**
      * Handle an incoming request.
@@ -24,7 +24,6 @@ class LoginMiddleware
 
         if ($credencials->fails()) {
             Lg::w(json_encode($request->all()), Response::HTTP_UNAUTHORIZED, json_encode($credencials->errors()), get_class($this), __LINE__, 'notice');
-
             return response()->json(['error' => 'Usuario o Contraseña incorrectos.',], Response::HTTP_UNAUTHORIZED);
         }
 

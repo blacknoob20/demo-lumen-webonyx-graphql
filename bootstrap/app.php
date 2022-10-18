@@ -78,7 +78,7 @@ $app->middleware([
 ]);
 
 $app->routeMiddleware([
-    'auth1' => App\Http\Middleware\LoginMiddleware::class,
+    'auth1' => App\Http\Middleware\AuthMiddleware::class,
     'token' => App\Http\Middleware\ValidateTokenMiddleware::class,
     // 'auth' => App\Http\Middleware\Authenticate::class,
 ]);
