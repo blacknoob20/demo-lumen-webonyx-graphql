@@ -1,26 +1,28 @@
 version: '2.2'
 services:
-  php:
+  fpm:
     hostname: crguerrero
-    container_name: fpm
-    image: php8.1-fpm-alpine-oci8
+    container_name: lumen
+    image: blacknoob20/php8.1-fpm-alpine-oci8:V0.0
+    # image: php8.2-fpm-alpine-oci8
     cpuset: '0'
     mem_limit: 64m
     volumes:
       - $PWD/:/var/www/html/
+      - $PWD/../php-8.1-fpm/opt/oracle/client/11.2/network/admin/:/opt/oracle/client/11.2/network/admin/
     environment:
       - TZ=America/Guayaquil
     networks:
       - net
-  sgp:
+  http:
     depends_on:
-      - php
+      - fpm
     container_name: apache
     image: webdevops/apache:alpine-3
     cpuset: '1'
     mem_limit: 32m
     environment:
-      - WEB_PHP_SOCKET=php:9000
+      - WEB_PHP_SOCKET=fpm:9000
       - WEB_DOCUMENT_ROOT=/var/www/html/
       - TZ=America/Guayaquil
     volumes:

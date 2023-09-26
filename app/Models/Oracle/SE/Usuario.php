@@ -31,7 +31,6 @@ class Usuario extends Adapter
         $this->ip             = $props['ip'] ?? NULL;
         $this->idempleado     = $props['idempleado'] ?? NULL;
         $this->numdocumento   = $props['numdocumento'] ?? NULL;
-        $this->pregunta       = $props['pregunta'] ?? NULL;
         $this->numeropregunta = $props['numeropregunta'] ?? NULL;
         $this->respuesta      = $props['respuesta'] ?? NULL;
     }
