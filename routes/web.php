@@ -39,8 +39,13 @@ $router->group(['middleware' => 'token'], function () use ($router) {
 $router->group(['middleware' => 'auth1'], function () use ($router) {
     $router->post('login', 'LoginController@iniciar_sesion');
 });
-
 $router->group(['prefix' => 'verificacion'], function () use ($router) {
     $router->post('/', 'LoginController@getPregunta');
     $router->post('preguntas', 'LoginController@validaPregunta');
+});
+
+$router->group(['prefix' => 'beneficiario'], function () use ($router) {
+    $router->post('pagineo', 'Ds\BeneficiarioController@BeneficiariosPag');
+    $router->post('datos', 'Ds\BeneficiarioController@BeneficiarioDatos');
+    $router->post('servicios', 'Ds\BeneficiarioController@BeneficiarioServicios');
 });
