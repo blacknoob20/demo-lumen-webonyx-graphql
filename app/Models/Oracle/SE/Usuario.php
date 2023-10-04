@@ -41,28 +41,30 @@ class Usuario extends Adapter
         // Conectar LDAP
         list($isNetUser, $foto) = $this->_verificarUsuarioLDAP($this->idusuariored, $this->clave);
 
-        if ($isNetUser) {
-            $existeLdap      = ($this->getMsjAlerta() == '');
-            $this->idusuario = NULL;
-            $this->clave     = NULL;
-        } else {
-            $existeLdap = true;
-            $this->idusuariored = NULL;
-        }
+        // * Si falla el inicio de sesion en LDAP, regresa el error
+        if ($this->getMsjAlerta() != '') return [
+            'login' => false,
+            'error' => $this->getMsjAlerta(),
+        ];
 
-        if ($existeLdap) {
-            if ($this->iniciar_sesion()) {
-                $reg     = $this->getFull();
-                $payload = ['uid' => $reg['idempleado'], 'nick' => ($this->idusuario ?? $this->idusuariored)];
+        if ($isNetUser) list($this->idusuario, $this->clave) = [NULL, NULL];
+        else $this->idusuariored = NULL;
 
-                return [
-                    'foto'  => $foto,
-                    'token' => JWebToken::getToken($payload),
-                ];
-            }
-        }
+        // * Si falla el inicio de sesion, regresa el error
+        if (!$this->iniciar_sesion()) return [
+            'login' => false,
+            'error' => $this->getMsjAlerta(),
+        ];
 
-        return false;
+        // * Generar TOKEN
+        $reg     = $this->getFull();
+        $payload = ['uid' => $reg['idempleado'], 'nick' => ($this->idusuario ?? $this->idusuariored)];
+
+        return [
+            'login' => true,
+            'foto'  => $foto,
+            'token' => JWebToken::getToken($payload),
+        ];
     } //validaUsuario()
 
     public function iniciar_sesion()

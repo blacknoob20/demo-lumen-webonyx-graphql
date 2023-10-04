@@ -18,8 +18,9 @@ class Lg
      */
     public static function w($msg, $code, $error, $class, $line, $type = 'info')
     {
-        $ug    = getallheaders()['User-Agent'];
-        $agent = trim(substr($ug,strrpos($ug,' ')));
+        $headers = getallheaders();
+        $ug      = (isset($headers['User-Agent'])) ? $headers['User-Agent'] : 'NONE';
+        $agent   = trim(substr($ug,strrpos($ug,' ')));
 
         Log::$type("{$_SERVER['REMOTE_ADDR']}\t$class($line)\t$code\t$msg\t$error\t$agent");
     }

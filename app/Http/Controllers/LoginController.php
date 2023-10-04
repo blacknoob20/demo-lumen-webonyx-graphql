@@ -22,15 +22,15 @@ class LoginController extends Controller
             ...$req->all(),
             'idusuario_log' => $req->input('idusuario'),
             'ip' => $req->ip(),
-            // Determinar si es un usuario de red
+            // * Determinar si es un usuario de red
             'idusuariored' => (strstr($req->input('idusuario'), '.')
                 ? $req->input('idusuario')
                 : NULL
             ),
         ];
 
-        $Usuario   = new Usuario($UsuarioProps);
-        $datos     = $Usuario->validaUsuario();
+        $Usuario = new Usuario($UsuarioProps);
+        $datos   = $Usuario->validaUsuario();
 
         return response()->json($datos, Response::HTTP_OK);
     }
