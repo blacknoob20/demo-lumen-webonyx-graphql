@@ -97,7 +97,7 @@ class Usuario extends Adapter
         $reg = $this->selectOne();
 
         // Convertir XML a arreglos
-        $reg['companeros'] = UtilsXml::xml2array($reg['companeros']);
+        $reg['companeros'] = (isset($reg['companeros']) ? UtilsXml::xml2array($reg['companeros']) : []);
         $reg['sistemas']   = UtilsXml::xml2array($reg['sistemas']);
         $reg['areas']      = UtilsXml::xml2array($reg['areas']);
         $reg['modulos']    = UtilsXml::xml2array($reg['modulos']);
