@@ -72,4 +72,20 @@ class BeneficiarioController extends Controller
 
         return response()->json(['ok' => true, 'data' => $rs], Response::HTTP_OK);
     }
+
+    public function BeneficiarioPreguntas(Request $req)
+    {
+        try {
+            $this->validate($req, ['idpersona' => 'required|numeric',]);
+        } catch (ValidationException $e) {
+            return response()->json(['ok' => false, 'error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
+        }
+
+        $oBeneficiario = new BeneficiarioAll;
+        $rs = $oBeneficiario->getPreguntas($req->input('idpersona'));
+
+        if ($oBeneficiario->getMsjAlerta() != '') return response()->json(['ok' => false, 'error' => $oBeneficiario->getMsjAlerta()], Response::HTTP_BAD_REQUEST);
+
+        return response()->json(['ok' => true, 'data' => $rs], Response::HTTP_OK);
+    }
 }

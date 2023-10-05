@@ -13,6 +13,9 @@
 |
 */
 
+// ********************
+// ** Rutas PUBLICAS **
+// ********************
 $router->get('/', function () use ($router) {
     return response()->json([
         'framework' => $router->app->version(),
@@ -29,12 +32,6 @@ $router->get('/', function () use ($router) {
 // Generate CAPTCHA image
 $router->get('captcha', 'CaptchaController@generarCaptcha');
 
-// Solo se puede acceder con TOKEN
-$router->group(['middleware' => 'token'], function () use ($router) {
-    $router->get('renovar', 'LoginController@renovarToken');
-    $router->post('graphql', 'GraphQLController@graphqlEndpoint');
-});
-
 // Ruta para el API de login
 $router->group(['middleware' => 'auth1'], function () use ($router) {
     $router->post('login', 'LoginController@iniciar_sesion');
@@ -44,8 +41,19 @@ $router->group(['prefix' => 'verificacion'], function () use ($router) {
     $router->post('preguntas', 'LoginController@validaPregunta');
 });
 
+// Beneficiarios de Desarrollo Comunitario
 $router->group(['prefix' => 'beneficiario'], function () use ($router) {
     $router->post('pagineo', 'Ds\BeneficiarioController@BeneficiariosPag');
     $router->post('datos', 'Ds\BeneficiarioController@BeneficiarioDatos');
     $router->post('servicios', 'Ds\BeneficiarioController@BeneficiarioServicios');
+    $router->post('preguntas', 'Ds\BeneficiarioController@BeneficiarioPreguntas');
+});
+
+// ********************
+// ** Rutas PRIVADAS **
+// ********************
+// Solo se puede acceder con TOKEN
+$router->group(['middleware' => 'token'], function () use ($router) {
+    $router->get('renovar', 'LoginController@renovarToken');
+    $router->post('graphql', 'GraphQLController@graphqlEndpoint');
 });

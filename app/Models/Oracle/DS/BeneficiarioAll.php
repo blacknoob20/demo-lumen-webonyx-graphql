@@ -29,7 +29,7 @@ class BeneficiarioAll extends Adapter
 
         $this->setSql($sql);
 
-        $reg = $this->selectAll();
+        $reg = $this->selectOne();
         return $reg;
     }
 
@@ -37,6 +37,16 @@ class BeneficiarioAll extends Adapter
     {
         $par = (empty($ixmlFiltros) ? 'null' : sprintf("'%s'", $ixmlFiltros));
         $sql = sprintf("select DS_PF_BENEFICIARIO.f_getServiciosXPersona(%s) AS MFRC from dual", $par);
+
+        $this->setSql($sql);
+
+        $reg = $this->selectAll();
+        return $reg;
+    }
+
+    public function getPreguntas($iidpersona)
+    {
+        $sql = sprintf("select DS_PF_BENEFICIARIO.f_getPreguntas(%d) AS MFRC from dual", $iidpersona);
 
         $this->setSql($sql);
 
