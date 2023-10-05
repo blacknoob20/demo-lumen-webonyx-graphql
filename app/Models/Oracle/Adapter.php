@@ -3,6 +3,7 @@
 namespace App\Models\Oracle;
 
 use App\Libraries\Logger\Lg;
+use ErrorException;
 
 class Adapter extends Conexion
 {
@@ -67,10 +68,6 @@ class Adapter extends Conexion
     public function getIdAI()
     {
         return $this->idAI;
-    }
-    public function setName_idAI($value)
-    {
-        $this->name_idAI = $value;
     }
     public function isNvl($value)
     {
@@ -142,7 +139,18 @@ class Adapter extends Conexion
         $msg = ($blog ? "{$this->sql} [{$this->clob_field}:{$this->clob_data}] [{$this->clob_field2}:{$this->clob_data2}]" : substr($this->sql, 0, strpos($this->sql, '\',')));
         Lg::w($msg, '0', 'OK', get_class($this), __LINE__, 'critical');
 
-        $execute = oci_execute($stmt);
+        try {
+            $execute = oci_execute($stmt);
+        } catch (ErrorException $e) {
+            if (strpos($e->getMessage(), 'ORA-') !== false) {
+                // * Extraer los errores de la base de datos
+                $pattern = '/\d+/';
+                preg_match_all($pattern, $e->getMessage(), $matches);
+                $errCode = ($matches[0][0] * -1);
+                $this->__errorDB($errCode, $e->getMessage(), NULL);
+                return false;
+            } else Lg::w($e->getMessage(), '0', 'ErrorException', get_class($this), __LINE__, 'critical');
+        }
 
         if ($isSetCLOB1) $clob->free();
         if ($isSetCLOB2) $clob2->free();
